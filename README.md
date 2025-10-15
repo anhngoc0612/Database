@@ -98,6 +98,8 @@ This project demonstrates a real-time data engineering pipeline that ingests, pr
     ```bash
     docker-compose exec spark-master python3 -m pip install requests pymongo
     docker-compose exec spark-worker python3 -m pip install requests pymongo
+    docker-compose exec jupyter pip install flask flask_cors
+    docker-compose exec jupyter python /home/jovyan/flight-map-api/app.py
     ```
 
     Then, run the following commands to start the Spark producer and consumer.

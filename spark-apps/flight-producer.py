@@ -14,14 +14,15 @@ producer_params = {
     'kafka.bootstrap.servers': 'broker:29092',
     'topic': 'flight-producer'
 }
-url = "http://host.docker.internal:5000/api/flights"
+url = "http://jupyter:5000/api/flights"
+# url = "https://glowing-disco-4jjj4vpqxxv5hj454-5000.app.github.dev/api/flights"
 
 
 def spark_session():
     spark = SparkSession.builder \
         .appName("KafkaProducerStreaming") \
         .master("spark://spark-master:7077") \
-        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.5") \
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1") \
         .getOrCreate()
     return spark
 
@@ -37,7 +38,7 @@ def fetch_data():
     except Exception as e:
         logger.error(f"Request error: {e}")
         return None
-    
+
 def spark_dataframe(spark, data):
     try:
         df = spark.createDataFrame([(json.dumps(data),)], ['value'])
@@ -51,27 +52,27 @@ def spark_dataframe(spark, data):
     except Exception as e:
         logger.error(f"Error sending data to Kafka: {e}")
 
-def process_stream(df, epoch_id):
-    data = fetch_data()
-    if not data:
-        logger.warning("No data to process.")
-        return
-
-    spark_dataframe(spark, data)
-
-    for flight in data['flights']:
-
-        try:
-            departure_city = flight["departure_city"]
-            arrival_city = flight["arrival_city"]
-            logger.info(f"[Epoch {epoch_id}] Flight from {departure_city} to {arrival_city}")
-        except Exception as e:
-            logger.warning(f"[Epoch {epoch_id}] Error parsing flight: {e}")
-
 def main():
     logger.info("Starting Kafka producer streaming...")
 
     spark = spark_session()
+
+    def process_stream(df, epoch_id):
+        data = fetch_data()
+        if not data:
+            logger.warning("No data to process.")
+            return
+
+        spark_dataframe(spark, data)
+
+        for flight in data['flights']:
+
+            try:
+                departure_city = flight["departure_city"]
+                arrival_city = flight["arrival_city"]
+                logger.info(f"[Epoch {epoch_id}] Flight from {departure_city} to {arrival_city}")
+            except Exception as e:
+                logger.warning(f"[Epoch {epoch_id}] Error parsing flight: {e}")
 
     trigger_df = spark.readStream \
         .format("rate") \
@@ -87,5 +88,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
