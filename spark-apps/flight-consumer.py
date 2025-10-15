@@ -50,17 +50,24 @@ def get_flight_schema():
     ])
 
 def process_batch(df, epoch_id):
-    # Check if the DataFrame is empty
-    if df.count() > 0:
-        logger.info(f"[Epoch {epoch_id}] Processing {df.count()} rows.")
+    # Persist the DataFrame to avoid recomputation and cache it in memory.
+    df.persist()
+    
+    count = df.count()
+    
+    if count > 0:
+        logger.info(f"[Epoch {epoch_id}] Processing {count} rows.")
         try:
             # Write the DataFrame to MongoDB using the Spark connector
             df.write.format("mongo").mode("append").save()
-            logger.info(f"[Epoch {epoch_id}] Successfully written {df.count()} rows to MongoDB.")
+            logger.info(f"[Epoch {epoch_id}] Successfully written {count} rows to MongoDB.")
         except Exception as e:
             logger.error(f"[Epoch {epoch_id}] MongoDB write failed: {e}")
     else:
         logger.info(f"[Epoch {epoch_id}] No data in this batch.")
+        
+    # Unpersist the DataFrame to free up memory
+    df.unpersist()
 
 def main():
     try:

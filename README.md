@@ -93,16 +93,23 @@ This project demonstrates a real-time data engineering pipeline that ingests, pr
 
 4.  **Run the producer and consumer:**
 
-    Open another terminal and run the following commands to start the Spark producer and consumer.
+    Open another terminal. First, install the required Python libraries (`requests` and `pymongo`) in both the Spark master and worker containers. This ensures the libraries are available for both the driver and the executors.
+
+    ```bash
+    docker-compose exec spark-master python3 -m pip install requests pymongo
+    docker-compose exec spark-worker python3 -m pip install requests pymongo
+    ```
+
+    Then, run the following commands to start the Spark producer and consumer.
 
     *   **Run the producer:**
         ```bash
-        docker-compose exec spark-master spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1 /spark/apps/flight-producer.py
+        docker-compose exec spark-master /spark/bin/spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1 /spark/apps/flight-producer.py
         ```
 
     *   **Run the consumer:**
         ```bash
-        docker-compose exec spark-master spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 /spark/apps/flight-consumer.py
+        docker-compose exec spark-master /spark/bin/spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 /spark/apps/flight-consumer.py
         ```
 
 ## Data Pipeline

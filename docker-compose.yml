@@ -244,7 +244,7 @@ services:
     volumes:
       - ./notebooks:/home/jovyan/work
       - ./data:/opt/airflow/data
-      - ./spark-apps:/opt/spark-apps
+      - ./spark-apps:/home/jovyan/spark-apps
       - ./flight-map-api:/home/jovyan/flight-map-api
     depends_on:
       - spark-master
